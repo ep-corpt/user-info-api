@@ -8,6 +8,10 @@ import (
 	"user-info-api/service"
 )
 
+const (
+	pathInquiry = "/inquiry"
+)
+
 func main() {
 	config.InitConfig()
 
@@ -18,6 +22,13 @@ func main() {
 
 	h := service.NewHandler(db, c)
 	go h.Consumer()
-	panic(http.ListenAndServe(viper.GetString("server.port"), mux.NewRouter()))
 
+	r := initRouter(h)
+	panic(http.ListenAndServe(viper.GetString("server.port"), r))
+}
+
+func initRouter(h *service.Handler) *mux.Router{
+	r := mux.NewRouter()
+	r.HandleFunc(pathInquiry, h.Inquiry).Methods(http.MethodPost)
+	return r
 }
