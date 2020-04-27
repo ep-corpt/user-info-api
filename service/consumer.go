@@ -15,6 +15,7 @@ const (
 type consumerTask struct{
 	db *gorm.DB
 	c *kafka.Consumer
+	rq *model.UserDetail
 }
 
 func (h *Handler)Consumer(){
@@ -37,13 +38,12 @@ func (t *consumerTask)initTask(h *Handler){
 	t.c = h.c
 }
 
-
 func (t *consumerTask)execute(m []byte) {
-	var rq model.UserDetail
-	if err:=json.Unmarshal(m, &rq); err!=nil{
+	var w model.UserDetailWrapper
+	if err:=json.Unmarshal(m, &w); err!=nil{
 		log.Printf(invalidRequest)
 		return
 	}
-
-	log.Printf("Value is %v\n", rq)
+	t.rq = &w.UserDetail
+	log.Printf("Value is %v\n", t.rq)
 }

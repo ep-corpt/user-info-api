@@ -1,6 +1,9 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
+	"net/http"
 	"user-info-api/config"
 	"user-info-api/service"
 )
@@ -14,5 +17,7 @@ func main() {
 	c := config.InitConsumer()
 
 	h := service.NewHandler(db, c)
-	h.Consumer()
+	go h.Consumer()
+	panic(http.ListenAndServe(viper.GetString("server.port"), mux.NewRouter()))
+
 }
