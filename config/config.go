@@ -6,6 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/spf13/viper"
 	"log"
+	"user-info-api/entity"
 )
 
 const(
@@ -26,6 +27,8 @@ func InitDB() *gorm.DB{
 	if err!= nil {
 		log.Panicln(err)
 	}
+	db.SingularTable(true)
+	db.AutoMigrate(&entity.UserInfo{})
 	return db
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/jinzhu/gorm"
 	"log"
+	"user-info-api/entity"
 	"user-info-api/model"
 )
 
@@ -15,7 +16,7 @@ const (
 type consumerTask struct{
 	db *gorm.DB
 	c *kafka.Consumer
-	rq *model.UserDetail
+	rq *model.UserDetailWrapper
 }
 
 func (h *Handler)Consumer(){
@@ -33,17 +34,38 @@ func (h *Handler)Consumer(){
 
 }
 
+func (t *consumerTask)execute(m []byte) {
+	t.initReq(m)
+	t.save()
+}
+
 func (t *consumerTask)initTask(h *Handler){
 	t.db = h.db
 	t.c = h.c
 }
 
-func (t *consumerTask)execute(m []byte) {
+func (t *consumerTask)initReq(m []byte){
 	var w model.UserDetailWrapper
 	if err:=json.Unmarshal(m, &w); err!=nil{
 		log.Printf(invalidRequest)
 		return
 	}
-	t.rq = &w.UserDetail
-	log.Printf("Value is %v\n", t.rq)
+	t.rq = &w
+	log.Printf("Value is %v\n", t.rq.UserDetail)
+}
+
+func (t *consumerTask)save(){
+	e := t.initEntity()
+	rs := t.db.Create(&e)
+	if rs.Error != nil {
+		log.Printf("Exception occurred while save data %v", rs.Error)
+	}
+}
+
+func(t *consumerTask)initEntity() *entity.UserInfo{
+	var u entity.UserInfo
+	u.Username = t.rq.CredentialDetail.Username
+	u.FirstName = t.rq.UserDetail.FirstName
+	u.LastName = t.rq.UserDetail.LastName
+	return &u
 }
